@@ -1,0 +1,16 @@
+{
+  "name": "pridark-bot",
+  "version": "1.0.0",
+  "description": "Giveaway bot for Pridark's Server",
+  "main": "argenta.js",
+  "scripts": {
+    "test": "p!ping"
+  },
+  "author": "DarthTorus",
+  "license": "GPL-3.0-or-later",
+  "dependencies": {
+    "colors": "^1.4.0",
+    "discord.js": "^12.5.1",
+    "dotenv": "^8.2.0"
+  }
+}

@@ -274,7 +274,11 @@ function viewRemainingNumbers(message) {
       remaining.push(i+1)
     }
   }
-  message.channel.send(`Remaining numbers are: \`${remaining.join(', ')}\``)
+  if(remaining.length == 0) {
+    message.channel.send(`No numbers remain!`)
+  } else {
+    message.channel.send(`Remaining numbers are: \`${remaining.join(', ')}\``)
+  }
 }
 
 

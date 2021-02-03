@@ -1,5 +1,6 @@
 'use strict'
 require("dotenv").config()
+require("./../lib/general.js")
 const Discord = require("discord.js")
 const colors = require("colors/safe")
 const fs = require('fs')
@@ -7,9 +8,6 @@ let numbers = require("./json/numbers.json")
 const client = new Discord.Client()
 
 
-function chooseItem() {
-	return random(numbers.length);
-}
 
 function random() {
   var min, max, num = 0;
@@ -41,10 +39,14 @@ function drawWinner(message) {
     message.reply("You are not permitted to draw the winner of the giveaway")
     return false
   } else {
+    if(numbers.length == 0){
+      message.reply("There is no giveaway in progress")
+      return false
+    }
     newIndex;
     winner = null
     while(winner == null) {
-      newIndex = chooseItem(numbers)
+      newIndex = Math.randInt(numbers.length)
       if(numbers[newIndex] != null) {
         winner = numbers[newIndex]
       }
@@ -63,6 +65,10 @@ function startGiveaway(message, args) {
     message.reply("You are not permitted to start the giveaway")
     return false
   } else {
+    if(numbers.length > 0) {
+      message.reply("You have a giveaway in progress")
+      return false
+    }
     let upperVal = 100
     if(args.length == 1) {
       upperVal = parseInt(args[0])
@@ -84,8 +90,13 @@ function resetNumbers(message) {
     message.reply("You are not permitted to reset the giveaway")
     return false
   } else {
+    if(numbers.length == 0) {
+      message.reply("There is no giveaway occurring at this time")
+      return false
+    }
     numbers = []
-    fs.writeFileSync('./json/numbers.json', JSON.stringify(numbers, null, ' '));
+    fs.writeFileSync('./json/numbers.json', JSON.stringify(numbers, null, ' '))
+    message.reply("The giveaway has been reset")
   }
 }
 
@@ -188,12 +199,21 @@ function inRange(pick, message) {
   return true
 }
 
-function recordPicks(pickedNumber, message) {
+
+async function recordPicks(pickedNumber, message) {
   if(numbers[pickedNumber-1] != null) {
-    message.channel.send(`${pickedNumber} has already been chosen by ${client.users.get(numbers[pickedNumber-1]). username}`)
+    //Made the function async, added the await to getting the member object, then grab the displayname from it (either nickname or username if there is no nickname)
+    let member = await message.guild.members.fetch(numbers[pickedNumber-1])
+    let userName = member.displayName
+    console.log(userName)
+    if(!userName){
+      userName = "a user that has left the server."
+    }
+
+    message.channel.send(`${pickedNumber} has already been chosen by ${userName}`)
   } else {
     numbers[pickedNumber-1] = message.author.id
-    message.channel.send(`${pickedNumber} has been picked by ${message.author.username}`)
+    message.channel.send(`${message.author.username} picks ${pickedNumber}`)
   }
 }
 
@@ -293,9 +313,10 @@ client.on("ready", () => {
 
 
 client.on("message", message => {
-  if(message.content.startsWith(process.env.TRIGGER) && message.author.id != client.user.id) { //Test if the message starts with the command trigger and if the author wasn't the bot
+  let text = message.content
+  if(text.toLowerCase().startsWith(process.env.TRIGGER) && message.author.id != client.user.id) { //Test if the message starts with the command trigger and if the author wasn't the bot
       if(message.channel.id == process.env.CHANNEL_ID) {
-      let tokens = message.content.split(' ')
+      let tokens = text.split(' ')
       let mainCommand = tokens[0].slice(process.env.TRIGGER.length)
       tokens.shift()
       let args = tokens
